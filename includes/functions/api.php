@@ -147,3 +147,106 @@ function canjearCodigo() {
 
 }
 add_action('wp_ajax_canjearCodigo', 'canjearCodigo');
+
+function crearCampana(){
+
+    $premios = $_POST['premios'];
+    $campana = $_POST['campana'];
+
+    global $wpdb;
+    $tabla_ofertas = $wpdb->prefix . 'raffle_prizes';
+
+    foreach($premios as $premio){
+        $datos = array(
+            'nombre' => $premio[0],
+            'cantidad' => $premio[1],
+            'descripcion' => $premio[2],
+            'probabilidad' => $premio[3],
+        );
+
+    
+        $formatos = array(
+            '%s',
+            '%d',
+            '%s',
+            '%d',
+        );
+    
+        $wpdb->insert($tabla_ofertas, $datos, $formatos);
+    }
+
+    $tabla_ofertas2 = $wpdb->prefix . 'raffle_config';
+
+    $datos2 = array(
+        'campana_permitida' => $campana
+    );
+    
+    $formatos2 = array(
+        '%s'
+    );
+    
+    $wpdb->insert($tabla_ofertas2, $datos2, $formatos2);
+    
+
+    if ($wpdb->last_error) {
+        wp_send_json(array('success' => false));
+    } else {
+        wp_send_json(array('success' => true));
+    }
+
+}
+add_action('wp_ajax_crearCampana', 'crearCampana');
+
+function existeCampana() {
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_config';
+
+    $consulta_sql = "SELECT campana_permitida FROM $tabla";
+    $count = $wpdb->get_results($consulta_sql);
+
+    if(!empty($count)){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function buscarCampana(){
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_config';
+
+    $consulta_sql = "SELECT * FROM $tabla";
+    $campana = $wpdb->get_results($consulta_sql);
+
+    wp_send_json(array('success' => true, 'campana' => $campana[0]->campana_permitida));
+    
+}
+add_action('wp_ajax_buscarCampana', 'buscarCampana');
+
+function rellenarTablaPremios() {
+
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_prizes';
+
+    $consulta_sql = "SELECT * FROM $tabla";
+    $resultados = $wpdb->get_results($consulta_sql);
+
+    $premios = array();
+
+    // Recorrer los resultados y crear objetos Oferta
+    foreach ($resultados as $fila) {
+        $premio = array(
+            $fila->id,
+            $fila->nombre,
+            $fila->cantidad,
+            $fila->descripcion,
+            $fila->probabilidad
+        );
+        // Agregar la oferta al array
+        $premios[] = $premio;
+    }
+
+    wp_send_json(array('success' => true, 'premios' => $premios));
+
+}
+add_action('wp_ajax_rellenarTablaPremios', 'rellenarTablaPremios');
