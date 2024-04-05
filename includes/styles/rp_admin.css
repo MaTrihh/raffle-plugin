@@ -1,0 +1,41 @@
+.container {
+    text-align: center;
+}
+
+.code-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.code-input {
+    width: 60px;
+    height: 80px !important;
+    text-align: center;
+    border: 2px solid #ccc !important;
+    border-radius: 8px !important;
+    background-color: white !important;
+    font-size: 24px !important;
+}
+
+input[type="text"]::-webkit-input-placeholder {
+    font-size: 24px;
+}
+
+input[type="text"]::-moz-placeholder {
+    font-size: 24px;
+}
+
+input[type="text"]:-ms-input-placeholder {
+    font-size: 24px;
+}
+
+input[type="text"]:-moz-placeholder {
+    font-size: 24px;
+}
+
+.opacity-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
