@@ -2,6 +2,7 @@
 function raffle_plugin_campana_page()
 {
     if(!existeCampana()){
+        
         ?>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
@@ -22,8 +23,15 @@ function raffle_plugin_campana_page()
                     var cantidad = jQuery("#cantidad").val();
                     var descripcion = jQuery("#descripcion").val();
                     var probabilidad = jQuery("#probabilidad").val();
+                    if(jQuery("#global").prop('checked')){
+                        var premio_global = "Si";
+                        var premio_val = 1;
+                    }else{
+                        var premio_global = "No";
+                        var premio_val = 0;
+                    }
 
-                    var premio = [nombre, cantidad, descripcion, probabilidad];
+                    var premio = [nombre, cantidad, descripcion, premio_val, probabilidad];
 
                     premios.push(premio);
 
@@ -31,13 +39,11 @@ function raffle_plugin_campana_page()
                         jQuery('<td>').text(nombre),
                         jQuery('<td>').text(cantidad),
                         jQuery('<td>').text(descripcion),
+                        jQuery('<td>').text(premio_global),
                         jQuery('<td>').text(probabilidad + '%')
                     );
 
                     tr.appendTo(".table tbody");
-
-                    console.log(premios);
-                    console.log(jQuery('#selectorCampanas').val());
                 });
 
                 jQuery( "#infoPremio" ).on( "submit", function( event ) {
@@ -47,6 +53,7 @@ function raffle_plugin_campana_page()
                 jQuery('#crearCampanaBtn').on('click', function () {
 
                     var campana = jQuery('#selectorCampanas').val();
+                    var porcentaje = jQuery('#porcentaje_premio').val();
 
                     jQuery.ajax({
                         type: "POST",
@@ -54,11 +61,12 @@ function raffle_plugin_campana_page()
                         data: {
                             action: "crearCampana",
                             premios: premios,
-                            campana: campana
+                            campana: campana,
+                            porcentaje: porcentaje
                         },
                         success: function (response) {
                             if (response.success) {
-                                alert("eono");
+                                alert("Campaña creada con exito");
                             } else {
                                 alert("Ha habido algun error, pruebe mas tarde");
                             }
@@ -109,6 +117,10 @@ function raffle_plugin_campana_page()
                                 <option value="campana_navidad">Campaña Navidad</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="porcentaje_premio">Porcentaje de premio:</label>
+                            <input type="text" name="porcentaje_premio" id="porcentaje_premio"></input>
+                        </div>
                     </form>
                 </div>
                 <div class="col-md-4" id="premios-campana">
@@ -118,6 +130,7 @@ function raffle_plugin_campana_page()
                                 <th scope="col">Premio</th>
                                 <th scope="col">Cantidad</th>
                                 <th scope="col">Descripción</th>
+                                <th scope="col">Premio Global</th>
                                 <th scope="col">Probabilidad</th>
                             </tr>
                         </thead>
@@ -161,6 +174,11 @@ function raffle_plugin_campana_page()
 
                             </br></br>
 
+                            <label for="global">Premio Global:</label>
+                            <input type="checkbox" id="global" name="global" value="true">
+
+                            </br></br>
+
                             <label for="probabilidad">Probabilidad del Premio:</label>
                             <input type="text" name="probabilidad" id="probabilidad"></input>
 
@@ -197,8 +215,8 @@ function raffle_plugin_campana_page()
                         },
                         success: function (response) {
                             if (response.success) {
-                                console.log(response.campana);
                                 jQuery('#selectorCampanas').val(response.campana);
+                                jQuery('#porcentaje_premio').val(response.porcentaje);
                             }
                         },
                         error: function (error) {
@@ -246,6 +264,13 @@ function raffle_plugin_campana_page()
                     var cantidad = jQuery("#cantidad").val();
                     var descripcion = jQuery("#descripcion").val();
                     var probabilidad = jQuery("#probabilidad").val();
+                    if(jQuery("#global").prop('checked')){
+                        var premio_global = "Si";
+                        var premio_val = 1;
+                    }else{
+                        var premio_global = "No";
+                        var premio_val = 0;
+                    }
 
                     var premio = [nombre, cantidad, descripcion, probabilidad];
 
@@ -255,6 +280,7 @@ function raffle_plugin_campana_page()
                         jQuery('<td>').text(nombre),
                         jQuery('<td>').text(cantidad),
                         jQuery('<td>').text(descripcion),
+                        jQuery('<td>').text(premio_global),
                         jQuery('<td>').text(probabilidad + '%')
                     );
 
@@ -331,6 +357,10 @@ function raffle_plugin_campana_page()
                                 <option value="campana_navidad">Campaña Navidad</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="porcentaje_premio">Porcentaje de premio:</label>
+                            <input type="text" name="porcentaje_premio" id="porcentaje_premio"></input>
+                        </div>
                     </form>
                 </div>
                 <div class="col-md-4" id="premios-campana">
@@ -340,6 +370,7 @@ function raffle_plugin_campana_page()
                                 <th scope="col">Premio</th>
                                 <th scope="col">Cantidad</th>
                                 <th scope="col">Descripción</th>
+                                <th scope="col">Premio Global</th>
                                 <th scope="col">Probabilidad</th>
                             </tr>
                         </thead>
@@ -379,6 +410,11 @@ function raffle_plugin_campana_page()
 
                             <label for="descripcion">Descripci�n del Premio:</label>
                             <input type="text" name="descripcion" id="descripcion"></input>
+
+                            </br></br>
+
+                            <label for="global">Premio Global:</label>
+                            <input type="checkbox" id="global" name="global" value="true">
 
                             </br></br>
 

@@ -11,6 +11,7 @@ function raffle_plugin_agregar_menu()
         'dashicons-schedule',
         3
     );
+
     add_submenu_page(
         'raffle_plugin_menu',
         __('Configuración de Campaña', ''),
@@ -18,6 +19,24 @@ function raffle_plugin_agregar_menu()
         'manage_options',
         'raffle_plugin_campana',
         'raffle_plugin_campana_page'
+    );
+
+    add_submenu_page(
+        'raffle_plugin_menu',
+        __('Info Shortcodes', ''),
+        __('Info Shortcodes', ''),
+        'manage_options',
+        'raffle_plugin_info',
+        'raffle_plugin_info_page'
+    );
+
+    add_submenu_page(
+        'raffle_plugin_menu',
+        __('Premios Conseguidos', ''),
+        __('Premios Conseguidos', ''),
+        'manage_options',
+        'raffle_plugin_prizes',
+        'raffle_plugin_prizes_page'
     );
 }
 add_action('admin_menu', 'raffle_plugin_agregar_menu');

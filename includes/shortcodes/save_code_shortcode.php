@@ -67,18 +67,21 @@ function save_code_shortcode() {
 
                 var code = code1 + code2 + code3 + code4;
 
+                var user_id = jQuery('#user_id').val();
+
                 jQuery.ajax({
                     type: "POST",
                     url: ajaxurl,
                     data: {
                         action: "canjearCodigo",
-                        codigo: code
+                        codigo: code,
+                        user_id: user_id
                     },
                     success: function (response) {
-                        if (response.success) {
-                            alert("eono");
+                        if (response.error === 0) {
+                            alert("Felicidades te ha tocado el premio: " + response.premio);
                         } else {
-                            alert("Ha habido algun error, pruebe mas tarde");
+                            alert(response.mensaje);
                         }
                     },
                     error: function (error) {
@@ -97,6 +100,7 @@ function save_code_shortcode() {
             <input type="text" class="code-input" id="code3" maxlength="1" placeholder="-">
             <input type="text" class="code-input" id="code4" maxlength="1" placeholder="-">
         </div>
+        <input type="hidden" name="user_id" id="user_id" value="<?php echo get_current_user_id(); ?>">
         <button id="saveBtn" class="btn btn-primary">Canjear Codigo</button>
     </div>
     <?php
