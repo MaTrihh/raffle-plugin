@@ -150,10 +150,11 @@ function getPremioAleatorio()
     global $wpdb;
     $tabla = $wpdb->prefix . 'raffle_prizes';
 
-    $consulta_sql = "SELECT * FROM $tabla";
+    $consulta_sql = "SELECT * FROM $tabla WHERE cantidad > 0";
     $resultados = $wpdb->get_results($consulta_sql);
 
     $premios = array();
+    $premio = array();
 
     // Recorrer los resultados y crear objetos Oferta
     foreach ($resultados as $fila) {
@@ -170,16 +171,20 @@ function getPremioAleatorio()
     }
 
     //Comprobar el premio
-    $rand = mt_rand(0, 99);
-    $acumulado = 0;
-
-    foreach ($premios as $premio) {
-        $acumulado += $premio[4];
-        if ($rand < $acumulado) {
-            //Retornar el premio
-            return $premio;
+    while(!empty($premio)){
+        $rand = mt_rand(0, 99);
+        $acumulado = 0;
+        foreach ($premios as $premio) {
+            $acumulado += $premio[4];
+            if ($rand < $acumulado) {
+                //Retornar el premio
+                rp_bajarCantidadPremio($premio);
+                return $premio;
+            }
         }
     }
+    
+    
 
 }
 
@@ -419,4 +424,31 @@ function rp_getPremioById($id) {
     $premios = $wpdb->get_results($consulta_sql);
 
     return $premios;
+}
+
+function rp_bajarCantidadPremio($premio) {
+
+    global $wpdb;
+
+    $cantidad = $premio[2];
+    $cantidad = $cantidad-1;
+
+    $tabla_ofertas = $wpdb->prefix . 'raffle_prizes';
+    
+    // Construir la condición WHERE
+    $condicion = array('id' => $premio[0]);
+
+    $premio[2] = $cantidad;
+
+    $premioNuevo = array(
+        'id' => $premio[0],
+        'nombre' => $premio[1],
+        'cantidad' => $premio[2],
+        'descripcion' => $premio[3],
+        'premio_global' => $premio[4],
+        'probabilidad' => $premio[5]
+    );
+    
+    // Realizar la actualización en la base de datos
+    $resultado = $wpdb->update($tabla_ofertas, $premioNuevo, $condicion);
 }
