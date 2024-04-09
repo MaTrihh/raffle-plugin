@@ -38,6 +38,15 @@ function raffle_plugin_agregar_menu()
         'raffle_plugin_prizes',
         'raffle_plugin_prizes_page'
     );
+
+    add_submenu_page(
+        'raffle_plugin_menu',
+        __('Premios Canjeados', ''),
+        __('Premios Canjeados', ''),
+        'manage_options',
+        'raffle_plugin_user_prizes',
+        'raffle_plugin_user_prizes_page'
+    );
 }
 add_action('admin_menu', 'raffle_plugin_agregar_menu');
 

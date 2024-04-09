@@ -287,6 +287,7 @@ function crearCampana()
                     'nombre' => $premio[0],
                     'cantidad' => $premio[1],
                     'descripcion' => $premio[2] . "PREMIO CANJEABLE EN LA TIENDA " . $usuario->display_name,
+                    'idAsociado' => $usuario->ID,
                     'premio_global' => $premio[3],
                     'probabilidad' => $premio[4]
                 );
@@ -298,6 +299,7 @@ function crearCampana()
                     '%s',
                     '%d',
                     '%d',
+                    '%d',
                 );
         
                 $wpdb->insert($tabla_ofertas, $datos, $formatos);
@@ -307,6 +309,7 @@ function crearCampana()
                 'nombre' => $premio[0],
                 'cantidad' => $premio[1],
                 'descripcion' => $premio[2],
+                'idAsociado' => 0,
                 'premio_global' => $premio[3],
                 'probabilidad' => $premio[4]
             );
@@ -316,6 +319,7 @@ function crearCampana()
                 '%s',
                 '%d',
                 '%s',
+                '%d',
                 '%d',
                 '%d',
             );
@@ -422,8 +426,8 @@ function rp_getPremioById($id) {
 
     $consulta_sql = "SELECT * FROM $tabla WHERE id = $id";
     $premios = $wpdb->get_results($consulta_sql);
-
-    return $premios;
+ 
+    return $premios[0];
 }
 
 function rp_bajarCantidadPremio($premio) {
@@ -451,4 +455,85 @@ function rp_bajarCantidadPremio($premio) {
     
     // Realizar la actualización en la base de datos
     $resultado = $wpdb->update($tabla_ofertas, $premioNuevo, $condicion);
+}
+
+function rp_getPremiosByUser($user_id) {
+
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_prizes_user';
+
+    $consulta_sql = "SELECT * FROM $tabla WHERE user_id = $user_id";
+    $premios = $wpdb->get_results($consulta_sql);
+
+    return $premios;
+
+}
+
+function buscar_premios_sorteo() {
+    $premiosObj = rp_getPremiosByUser($_POST['user_id']);
+    $premios = array();
+
+    foreach($premiosObj as $premio){
+
+        $premioData = rp_getPremioById($premio->idPremio);
+        array_push($premios, $premioData);
+    }
+
+    wp_send_json(array('success' => true, 'premios' => $premios));
+}
+add_action('wp_ajax_buscar_premios_sorteo', 'buscar_premios_sorteo');
+
+function getPremioConseguido($idPremio, $user_id) {
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_prizes_user';
+
+    $consulta_sql = "SELECT * FROM $tabla WHERE idPremio = $idPremio AND user_id = $user_id";
+    $premios = $wpdb->get_results($consulta_sql);
+
+    return $premios;
+}
+function user_premio_sorteo() {
+
+    $ids = $_POST['valoresCheckbox'];
+    $user_id = $_POST['user_id'];
+
+    foreach($ids as $id){
+        $premio = getPremioConseguido($id, $user_id);
+        canjear_premio($premio);
+    }
+
+    wp_send_json(array('success' => true));
+}
+add_action('wp_ajax_user_premio_sorteo', 'user_premio_sorteo');
+
+function canjear_premio($premio) {
+    global $wpdb;
+
+    $tabla_ofertas = $wpdb->prefix . 'raffle_prizes_user';
+
+    $premioData = $premio[0];
+    
+    // Construir la condición WHERE
+    $condicion = array('id' => $premioData->id);
+
+    $premioNuevo = array(
+        'id' => $premioData->id,
+        'idPremio' => $premioData->idPremio,
+        'user_id' => $premioData->user_id,
+        'canjeado' => 1,
+        'fecha_canjeado' => date("Y-m-d")
+    );
+    
+    // Realizar la actualización en la base de datos
+    return $resultado = $wpdb->update($tabla_ofertas, $premioNuevo, $condicion);
+}
+
+function getTodosPremiosCanjeados() {
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_prizes_user';
+
+    $consulta_sql = "SELECT * FROM $tabla WHERE canjeado = 1";
+    $premios = $wpdb->get_results($consulta_sql);
+
+    return $premios;
 }

@@ -1,6 +1,5 @@
 <?php
-function raffle_plugin_prizes_page()
-{
+function raffle_plugin_user_prizes_page() {
     ?>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
@@ -58,7 +57,7 @@ function raffle_plugin_prizes_page()
             <tbody>
 
                 <?php
-                $premios = getPremiosConseguidos();
+                $premios = getTodosPremiosCanjeados();
 
                 foreach ($premios as $premio) {
                     $premioDatos = rp_getPremioById($premio->idPremio);
