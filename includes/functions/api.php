@@ -537,3 +537,38 @@ function getTodosPremiosCanjeados() {
 
     return $premios;
 }
+
+function getTodosPremiosConseguidosByComercio($idAsociado) {
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'raffle_prizes';
+
+    $consulta_sql = "SELECT id FROM $tabla WHERE idAsociado = $idAsociado";
+    $premios_db = $wpdb->get_results($consulta_sql);
+    $premios_ids = array();
+
+    foreach($premios_db as $premio_db) {
+
+        array_push($premios_ids, $premio_db->id);
+    }
+
+    $ids_str = implode(",", $premios_ids);
+
+    $tabla2 = $wpdb->prefix . 'raffle_prizes_user';
+    $consulta_sql2 = "SELECT * FROM $tabla2 WHERE idPremio IN ($ids_str)";
+    $premios_conseguidos = $wpdb->get_results($consulta_sql2);
+    $premios_array = array();
+
+    foreach($premios_conseguidos as $premio_conseguido) {
+
+        $premios_array[] = array(
+            'id' => $premio_conseguido->id,
+            'idPremio' => $premio_conseguido->idPremio,
+            'user_id' => $premio_conseguido->user_id,
+            'canjeado' => $premio_conseguido->canjeado,
+            'fecha_canjeado' => $premio_conseguido->fecha_canjeado
+        );
+
+    }
+
+    return $premios_conseguidos;
+}

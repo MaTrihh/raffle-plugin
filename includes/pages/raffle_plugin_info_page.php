@@ -18,6 +18,9 @@ function raffle_plugin_info_page() {
 
     <h2>[show_prizes] Shortcode para que los usuarios vean sus premios</h2>
 
+    </br></br>
+
+    <h2>[show_prizes_comercio] Shortcode para que los comercios vean sus premios conseguidos, canjeados y su estado</h2>
     <?php
 
 }
