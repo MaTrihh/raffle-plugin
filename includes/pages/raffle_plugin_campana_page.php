@@ -240,7 +240,8 @@ function raffle_plugin_campana_page()
                                         jQuery('<td>').text(premio[1]),
                                         jQuery('<td>').text(premio[2]),
                                         jQuery('<td>').text(premio[3]),
-                                        jQuery('<td>').text(premio[4] + '%')
+                                        jQuery('<td>').text(premio[4]),
+                                        jQuery('<td>').text(premio[5] + '%')
                                     );
 
                                     tr.appendTo(".table tbody");
@@ -318,6 +319,28 @@ function raffle_plugin_campana_page()
                     });
                 });
 
+                jQuery('#cancelarCampanaBtn').on('click', function () {
+
+                    jQuery.ajax({
+                        type: "POST",
+                        url: ajaxurl,
+                        data: {
+                            action: "cancelarCampana"
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                alert("Campaña Cancelada");
+                                location.reload();
+                            } else {
+                                alert("Ha habido algun error, pruebe mas tarde");
+                            }
+                        },
+                        error: function (error) {
+                            // Manejar errores si los hay
+                            console.error(error);
+                        }
+                    });
+                });
                 
             });
         </script>

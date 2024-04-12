@@ -228,3 +228,19 @@ function save_prize_shortcode() {
     <?php
 }
 add_shortcode('save_prize', 'save_prize_shortcode');
+
+function prueba_mil(){
+    $resultados = prueba();
+
+    foreach($resultados as $resultado => $valor){
+        
+        if($resultado != "No hay Premio"){
+            echo 'El Premio con nombre ' . rp_getPremioById($resultado)->nombre . ' ha tocado: ' . $valor . ' veces';
+            echo '</br>';
+        }else{
+            echo 'No ha tocado premio ' . $valor . ' veces.';
+        }
+        
+    }
+}
+add_shortcode('prueba_mil', 'prueba_mil');

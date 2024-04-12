@@ -130,12 +130,14 @@ function hayPremio()
 
     //Ver porcentaje de premio que hay
     $porcentaje = getPorcentajeConfig();
+    $porcentaje = $porcentaje/100;
+
+    $numero_aleatorio = mt_rand() / mt_getrandmax();
+    $numero_aleatorio = number_format($numero_aleatorio, 2);
 
     if ($porcentaje != 0) {
         //Comprobar si hay premio
-        $aleatorio = rand(0, 100);
-
-        if ($aleatorio <= $porcentaje) {
+        if ($numero_aleatorio < $porcentaje) {
             return true;
         } else {
             return false;
@@ -154,7 +156,10 @@ function getPremioAleatorio()
     $resultados = $wpdb->get_results($consulta_sql);
 
     $premios = array();
+    $probabilidades = array();
+    $probabilidades_acumuladas = array();
     $premio = array();
+    $premio_devolver = null;
 
     // Recorrer los resultados y crear objetos Oferta
     foreach ($resultados as $fila) {
@@ -168,24 +173,68 @@ function getPremioAleatorio()
         );
         // Agregar la oferta al array
         $premios[] = $premio;
+        $probabilidades[] = $premio[5]/100;
+        $premio = array();
+        
     }
 
-    //Comprobar el premio
-    while(!empty($premio)){
-        $rand = mt_rand(0, 99);
-        $acumulado = 0;
-        foreach ($premios as $premio) {
-            $acumulado += $premio[4];
-            if ($rand < $acumulado) {
-                //Retornar el premio
-                rp_bajarCantidadPremio($premio);
-                return $premio;
+    for ($i = 0; $i < count($probabilidades); $i++) {
+        if($i-1 >= 0){
+            $contador = $i;
+            $probabilidad = $probabilidades[$i];
+
+            do{
+                $contador--;
+                $probabilidad = $probabilidades[$contador] + $probabilidad;
+
+            }while($contador != 0);
+
+            $probabilidades_acumuladas[] = $probabilidad;
+        }else{
+            $probabilidades_acumuladas[] = $probabilidades[$i];
+        }
+    }
+
+
+    while($premio_devolver == null){
+        $numero_aleatorio = mt_rand() / mt_getrandmax();
+        $numero_aleatorio = number_format($numero_aleatorio, 2);
+
+        for($f = 0; $f < count($probabilidades_acumuladas); $f++) {
+            if($probabilidades_acumuladas[$f] > $numero_aleatorio){
+                $premio_devolver = $premios[$f];
+                return $premio_devolver;
             }
         }
     }
-    
-    
+}
 
+function prueba(){
+    
+    $premios = array(
+        '232' => 0,
+        '233' => 0,
+        '234' => 0,
+        '235' => 0,
+        'No hay Premio' => 0
+    );
+
+    for($i = 0; $i <= 1000; $i++){
+
+        if(hayPremio()){
+            $premio_nuevo = getPremioAleatorio();
+
+            foreach($premios as $premio => $veces){
+                if(intval($premio) == $premio_nuevo[0]){
+                    $premios[$premio] = $veces + 1;
+                }
+            }
+        }else{
+            $premios['No hay Premio'] = $premios['No hay Premio']+1;
+        }
+    }
+
+    return $premios;
 }
 
 function guardarPremioUsuario($premio, $user_id) {
@@ -267,7 +316,7 @@ function getUsersCampana($campana){
     return $usuarios_campana;
 }
 
-function crearCampana()
+function crearCampana() 
 {
 
     $premios = $_POST['premios'];
@@ -280,14 +329,11 @@ function crearCampana()
     foreach ($premios as $premio) {
 
         if($premio[3] == 1){
-            $usuarios = getUsersCampana($campana);
-
-            foreach($usuarios as $usuario){
+            
                 $datos = array(
                     'nombre' => $premio[0],
                     'cantidad' => $premio[1],
-                    'descripcion' => $premio[2] . "PREMIO CANJEABLE EN LA TIENDA " . $usuario->display_name,
-                    'idAsociado' => $usuario->ID,
+                    'descripcion' => $premio[2],
                     'premio_global' => $premio[3],
                     'probabilidad' => $premio[4]
                 );
@@ -299,17 +345,15 @@ function crearCampana()
                     '%s',
                     '%d',
                     '%d',
-                    '%d',
                 );
         
                 $wpdb->insert($tabla_ofertas, $datos, $formatos);
-            }
+            
         }else{
             $datos = array(
                 'nombre' => $premio[0],
                 'cantidad' => $premio[1],
                 'descripcion' => $premio[2],
-                'idAsociado' => 0,
                 'premio_global' => $premio[3],
                 'probabilidad' => $premio[4]
             );
@@ -319,7 +363,6 @@ function crearCampana()
                 '%s',
                 '%d',
                 '%s',
-                '%d',
                 '%d',
                 '%d',
             );
@@ -572,3 +615,23 @@ function getTodosPremiosConseguidosByComercio($idAsociado) {
 
     return $premios_conseguidos;
 }
+
+function cancelarCampana(){
+    // Obtiene el objeto global $wpdb
+    global $wpdb;
+
+    $tabla = $wpdb->prefix . 'raffle_config';
+    // Realiza la consulta para borrar todos los registros de la tabla
+    $resultado = $wpdb->query( "TRUNCATE TABLE $tabla" );
+
+    $tabla = $wpdb->prefix . 'raffle_prizes';
+    // Realiza la consulta para borrar todos los registros de la tabla
+    $resultado = $wpdb->query( "TRUNCATE TABLE $tabla" );
+
+    $tabla = $wpdb->prefix . 'raffle_prizes_user';
+    // Realiza la consulta para borrar todos los registros de la tabla
+    $resultado = $wpdb->query( "TRUNCATE TABLE $tabla" );
+
+    wp_send_json(array('success' => true));
+}
+add_action('wp_ajax_cancelarCampana', 'cancelarCampana');
