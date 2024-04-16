@@ -316,16 +316,71 @@ function getUsersCampana($campana){
     return $usuarios_campana;
 }
 
-function crearCampana() 
-{
+function guardarConfigPremio($id_premio, $premios_config){
 
-    $premios = $_POST['premios'];
-    $campana = $_POST['campana'];
-    $porcentaje = $_POST['porcentaje'];
+
+    // Procesar la configuración del premio
+    if ($id_premio !== 0 && is_array($premios_config) && !empty($premios_config)) {
+        // Construir la estructura de datos
+        $data = array(
+            'id' => $id_premio,
+            'comercio_config' => array()
+        );
+
+        foreach ($premios_config as $premio) {
+            $comercioID = isset($premio['comercioID']) ? $premio['comercioID'] : 0;
+            $cantidad = isset($premio['cantidad']) ? $premio['cantidad'] : 0;
+
+            // Verificar si los datos son válidos
+            if (is_numeric($comercioID) && is_numeric($cantidad)) {
+                // Agregar la configuración del premio al array
+                $data['comercio_config'][] = array(
+                    'comercioID' => $comercioID,
+                    'cantidad' => $cantidad
+                );
+            }
+        }
+
+        // Codificar el array en JSON
+        $jsonString = json_encode($data);
+
+        // Guardar el JSON en un archivo local
+        $fileDirectory = plugin_dir_path(__FILE__) . 'config/';
+
+        if (!file_exists($fileDirectory)) {
+            if (!mkdir($fileDirectory, 0755, true)) {
+                echo "Error al crear el directorio de configuración.";
+                exit;
+            }
+        }
+
+        $file = $fileDirectory . $id_premio . '.json';
+
+        if (file_put_contents($file, $jsonString) !== false) {
+            // Obtener la URL del directorio del plugin
+            $plugin_url = plugins_url('/', __FILE__);
+
+            // Construir la URL completa del archivo JSON
+            $file_url = $plugin_url . 'config/' . $id_premio . '.json';
+
+            // Devolver la URL o utilizarla según sea necesario
+            echo "La configuración del premio se ha guardado correctamente. URL del archivo: $file_url";
+        } else {
+            echo "Error al guardar la configuración del premio. Detalles: " . error_get_last()['message'];
+        }
+
+    } else {
+        echo "Datos de entrada inválidos.";
+    }
+}
+
+function guardarPremios($premios, $premios_config){
+
 
     global $wpdb;
     $tabla_ofertas = $wpdb->prefix . 'raffle_prizes';
 
+    $contador = 0;
     foreach ($premios as $premio) {
 
         if($premio[3] == 1){
@@ -348,6 +403,10 @@ function crearCampana()
                 );
         
                 $wpdb->insert($tabla_ofertas, $datos, $formatos);
+
+                $nuevo_id = $wpdb->insert_id;
+                guardarConfigPremio($nuevo_id, $premios_config[$contador]);
+                $contador++;
             
         }else{
             $datos = array(
@@ -372,26 +431,49 @@ function crearCampana()
         
     }
 
-    $tabla_ofertas2 = $wpdb->prefix . 'raffle_config';
-
-    $datos2 = array(
-        'campana_permitida' => $campana,
-        'porcentaje_premio' => $porcentaje
-    );
-
-    $formatos2 = array(
-        '%s',
-        '%d'
-    );
-
-    $wpdb->insert($tabla_ofertas2, $datos2, $formatos2);
-
-
     if ($wpdb->last_error) {
-        wp_send_json(array('success' => false));
+        return false;
     } else {
-        wp_send_json(array('success' => true));
+        return true;
     }
+}
+
+function crearCampana() 
+{
+    global $wpdb;
+
+    $premios = $_POST['premios'];
+    $premios_config = $_POST['premios_config'];
+    $campana = $_POST['campana'];
+    $porcentaje = $_POST['porcentaje'];
+
+    $resultado = guardarPremios($premios, $premios_config);
+
+    if($resultado){
+        $tabla_ofertas = $wpdb->prefix . 'raffle_config';
+
+        $datos = array(
+            'campana_permitida' => $campana,
+            'porcentaje_premio' => $porcentaje
+        );
+
+        $formatos = array(
+            '%s',
+            '%d'
+        );
+
+        $wpdb->insert($tabla_ofertas, $datos, $formatos);
+
+
+        if ($wpdb->last_error) {
+            wp_send_json(array('success' => false));
+        } else {
+            wp_send_json(array('success' => true));
+        }
+    }else{
+        wp_send_json(array('success' => false));
+    }
+    
 
 }
 add_action('wp_ajax_crearCampana', 'crearCampana');
@@ -442,6 +524,7 @@ function rellenarTablaPremios()
             $fila->nombre,
             $fila->cantidad,
             $fila->descripcion,
+            $fila->premio_global,
             $fila->probabilidad
         );
         // Agregar la oferta al array
@@ -635,3 +718,22 @@ function cancelarCampana(){
     wp_send_json(array('success' => true));
 }
 add_action('wp_ajax_cancelarCampana', 'cancelarCampana');
+
+function getComercios() {
+
+    $campana = $_POST['campana'];
+    $comercios = getUsersCampana($campana);
+    $comercios_data = array();
+
+    foreach($comercios as $comercio){
+        
+        $comercios_data[] = array(
+                                'ID' => $comercio->data->ID,
+                                'nombre' => $comercio->data->display_name
+                            );
+    }
+
+    
+    wp_send_json(array('success' => true, 'comercios' => $comercios_data));
+}
+add_action('wp_ajax_getComercios', 'getComercios');
