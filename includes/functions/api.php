@@ -241,25 +241,80 @@ function guardarPremioUsuario($premio, $user_id) {
     global $wpdb;
     $tabla_ofertas = $wpdb->prefix . 'raffle_prizes_user';
 
-    $datos = array(
-        'idPremio' => $premio[0],
-        'user_id' => $user_id,
-        'canjeado' => 0
-    );
+    if($premio[4] == 1){
+        $premio_config = getPremioConfigById($premio[0]);
+        $comercios_config = $premio_config['comercio_config'];
 
-    $formatos = array(
-        '%d',
-        '%d',
-        '%d'
-    );
 
-    $wpdb->insert($tabla_ofertas, $datos, $formatos);
+        do{
+            $numeroAleatorio = rand(1, count($comercios_config) - 1);
+            
+            $cantidad = $comercios_config[$numeroAleatorio]['cantidad'];
+            $hoy = new DateTime();
 
-    if ($wpdb->last_error) {
-        return false;
-    } else {
-        return true;
+            // Agregar 15 días
+            $hoy->add(new DateInterval('P15D'));
+            $fecha_caducidad = $hoy->format('Y-m-d');
+
+            if($cantidad != 0){
+                $datos = array(
+                    'idPremio' => $premio[0],
+                    'user_id' => $user_id,
+                    'idAsociado' => $comercios_config[$numeroAleatorio]['comercioID'],
+                    'canjeado' => 0,
+                    'fecha_caducidad' => $fecha_caducidad
+                );
+        
+                $formatos = array(
+                    '%d',
+                    '%d',
+                    '%d',
+                    '%d',
+                    '%s'
+                );
+        
+                $wpdb->insert($tabla_ofertas, $datos, $formatos);
+        
+                if ($wpdb->last_error) {
+                    return -1;
+                } else {
+                    return $comercios_config[$numeroAleatorio]['comercioID'];
+                }
+            }
+        }while($cantidad == 0);
+        
+    }else{
+        $hoy = new DateTime();
+
+        // Agregar 15 días
+        $hoy->add(new DateInterval('P15D'));
+        $fecha_caducidad = $hoy->format('Y-m-d');
+
+        $datos = array(
+            'idPremio' => $premio[0],
+            'user_id' => $user_id,
+            'idAsociado' => 0,
+            'canjeado' => 0,
+            'fecha_caducidad' => $fecha_caducidad
+        );
+
+        $formatos = array(
+            '%d',
+            '%d',
+            '%d',
+            '%d',
+            '%s'
+        );
+
+        $wpdb->insert($tabla_ofertas, $datos, $formatos);
+
+        if ($wpdb->last_error) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
+    
 }
 
 function canjearCodigo()
@@ -281,10 +336,17 @@ function canjearCodigo()
             $premioConseguido = getPremioAleatorio();
 
             //Guardar premio
-            guardarPremioUsuario($premioConseguido, $_POST['user_id']);
+            $idComercio = guardarPremioUsuario($premioConseguido, $_POST['user_id']);
+            $comercio = get_userdata($idComercio)->first_name;
+
+            $hoy = new DateTime();
+
+            // Agregar 15 días
+            $hoy->add(new DateInterval('P15D'));
+            $fecha_caducidad = $hoy->format('Y-m-d');
 
             //Retornar premio
-            wp_send_json(array('error' => 0, 'mensaje' => 'Te ha tocado un premio', 'premio' => $premioConseguido[1]));
+            wp_send_json(array('error' => 0, 'mensaje' => 'Te ha tocado un premio', 'nombre' => $premioConseguido[1], 'idComercio' => $idComercio, 'id' => $premioConseguido[0], 'descripcion' => $premioConseguido[3], 'fecha_caducidad' => $fecha_caducidad, 'comercio' => $comercio));
         } else {
 
             //Retornar false, no hay premio
@@ -737,3 +799,49 @@ function getComercios() {
     wp_send_json(array('success' => true, 'comercios' => $comercios_data));
 }
 add_action('wp_ajax_getComercios', 'getComercios');
+
+function getPremiosConfig() {
+    $cofig_premios = array();
+
+    $ruta_carpeta = plugin_dir_path(__FILE__) . 'config/';
+
+    // Obtener la lista de archivos en la carpeta
+    $archivos = scandir($ruta_carpeta);
+
+    // Array para almacenar los nombres de los archivos JSON sin la extensión
+    $archivos_json = array();
+
+    // Iterar sobre los archivos
+    foreach ($archivos as $archivo) {
+        // Verificar si el archivo es un archivo JSON
+        if (pathinfo($archivo, PATHINFO_EXTENSION) == 'json') {
+            // Obtener el nombre del archivo sin la extensión y almacenarlo en el array
+            $nombre_archivo = pathinfo($archivo, PATHINFO_FILENAME);
+            $archivos_json[] = $nombre_archivo;
+        }
+    }
+
+    foreach($archivos_json as $archivo_json){
+        // Lee el contenido del archivo JSON
+        $ruta = plugins_url('/', __FILE__) . 'config/'. $archivo_json .'.json';
+        $json = file_get_contents($ruta);
+
+        // Decodifica el JSON y lo convierte en un array
+        $array = json_decode($json, true);
+
+        $config_premios[] = $array;
+    }
+
+    return $config_premios;
+    
+}
+
+function getPremioConfigById($idPremio) {
+    $premios_config = getPremiosConfig();
+
+    foreach($premios_config as $config) {
+        if($config['id'] == $idPremio){
+            return $config;
+        }
+    }
+}

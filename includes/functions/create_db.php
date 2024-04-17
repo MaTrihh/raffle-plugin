@@ -45,7 +45,6 @@ function raffle_plugin_crear_tabla_premios() {
         cantidad INT NOT NULL,
         descripcion varchar(255) NOT NULL,
         premio_global TINYINT NOT NULL,
-        idAsociado INT NOT NULL,
         probabilidad int NOT NULL,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
@@ -62,6 +61,7 @@ function raffle_plugin_crear_tabla_premios_guardados() {
         id INT NOT NULL AUTO_INCREMENT,
         idPremio INT NOT NULL,
         user_id INT NOT NULL,
+        idAsociado INT NOT NULL,
         canjeado TINYINT NOT NULL,
         fecha_canjeado DATE,
         PRIMARY KEY (id)
