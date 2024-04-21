@@ -50,6 +50,7 @@ function raffle_plugin_prizes_page()
                     <th>Usuario</th>
                     <th>Nombre del Premio</th>
                     <th>Descripcion del Premio</th>
+                    <th>Comercio donde canjear</th>
                     <th>Canjeado</th>
                     <th>Fecha Canjeo</th>
                     <th>Acciones</th>
@@ -75,6 +76,9 @@ function raffle_plugin_prizes_page()
                             <?php echo $premioDatos->descripcion; ?>
                         </td>
 
+                        <td>
+                            <?php echo ($premio->idAsociado != 0) ? get_userdata($premio->idAsociado)->first_name : ""; ?>
+                        </td>
 
                         <td>
                             <?php echo ($premio->canjeado == 0) ? 'Sin canjear' : 'Canjeado'; ?>

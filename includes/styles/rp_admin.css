@@ -39,3 +39,43 @@ input[type="text"]:-moz-placeholder {
     opacity: 0.5;
     pointer-events: none;
 }
+
+.containerBackRaf {
+    display: flex;
+    flex-wrap: wrap;
+    /* Cambiado a wrap para que los elementos se envuelvan */
+    justify-content: space-between;
+    /* Cambiado a space-between para que los elementos estén distribuidos uniformemente */
+    padding: 20px;
+    text-align: center;
+}
+
+.cardBackRaf {
+    width: calc(33.33% - 20px);
+    /* Calculamos el ancho de cada tarjeta restando el margen */
+    margin-bottom: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-right: 20px;
+    /* Agregamos un margen derecho para separar las tarjetas */
+}
+
+/* Estilo para la última tarjeta de cada fila para evitar el margen derecho */
+.cardBackRaf:nth-child(3n) {
+    margin-right: 0;
+}
+
+@media (max-width: 768px) {
+    .cardBackRaf {
+        width: calc(50% - 20px);
+        /* Cambiamos a dos tarjetas por fila en pantallas más pequeñas */
+    }
+
+    /* Estilo para la última tarjeta de cada fila para evitar el margen derecho en pantallas más pequeñas */
+    .cardBackRaf:nth-child(2n) {
+        margin-right: 0;
+    }
+}

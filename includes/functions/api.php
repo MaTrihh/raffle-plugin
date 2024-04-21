@@ -274,6 +274,10 @@ function guardarPremioUsuario($premio, $user_id) {
                 );
         
                 $wpdb->insert($tabla_ofertas, $datos, $formatos);
+
+                $premio_config['comercio_config'][$numeroAleatorio]['cantidad'] = $cantidad - 1;
+
+                updatePremioConfigById($premio[0], $premio_config['comercio_config']);
         
                 if ($wpdb->last_error) {
                     return -1;
@@ -293,7 +297,7 @@ function guardarPremioUsuario($premio, $user_id) {
         $datos = array(
             'idPremio' => $premio[0],
             'user_id' => $user_id,
-            'idAsociado' => 0,
+            'idAsociado' => 43,
             'canjeado' => 0,
             'fecha_caducidad' => $fecha_caducidad
         );
@@ -317,6 +321,18 @@ function guardarPremioUsuario($premio, $user_id) {
     
 }
 
+function hayPremioCantidad($idPremio) {
+    $config = getPremioConfigById($idPremio);
+    
+    foreach($config as $comercio){
+        if($comercio['cantidad'] > 0){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function canjearCodigo()
 {
 
@@ -332,8 +348,22 @@ function canjearCodigo()
         //Retornar true o false si ha ganado premio o no y la informacion del premio
         if ($premio) {
 
+            do{
+                $premioConseguido = getPremioAleatorio();
+
+                if($premioConseguido[4] == 1){
+
+                    $resultado = hayPremioCantidad($premioConseguido[0]);
+
+                }elseif($premioConseguido[3] > 0){
+                    $resultado = true;
+                }else{
+                    $resultado = false;
+                }
+
+            }while($resultado != true);
             //Ver que premio toca
-            $premioConseguido = getPremioAleatorio();
+            
 
             //Guardar premio
             $idComercio = guardarPremioUsuario($premioConseguido, $_POST['user_id']);
@@ -608,11 +638,11 @@ function getPremiosConseguidos() {
     return $premios;
 }
 
-function rp_getPremioById($id) {
+function rp_getPremioById($idPremio) {
     global $wpdb;
     $tabla = $wpdb->prefix . 'raffle_prizes';
 
-    $consulta_sql = "SELECT * FROM $tabla WHERE id = $id";
+    $consulta_sql = "SELECT * FROM $tabla WHERE id = $idPremio";
     $premios = $wpdb->get_results($consulta_sql);
  
     return $premios[0];
@@ -660,22 +690,33 @@ function rp_getPremiosByUser($user_id) {
 function buscar_premios_sorteo() {
     $premiosObj = rp_getPremiosByUser($_POST['user_id']);
     $premios = array();
+    $idAsociado = $_POST['idAsociado'];
 
     foreach($premiosObj as $premio){
 
-        $premioData = rp_getPremioById($premio->idPremio);
-        array_push($premios, $premioData);
+        if($premio->idAsociado == $idAsociado && $premio->canjeado == 0){
+            $premioData = (array) rp_getPremioById($premio->idPremio);
+            $premios[] = array(
+                'id' => $premioData['id'],
+                'nombre' => $premioData['nombre'],
+                'cantidad' => $premioData['cantidad'],
+                'descripcion' => $premioData['descripcion'],
+                'premio_global' => $premioData['premio_global'],
+                'probabilidad' => $premioData['probabilidad'],
+                'idPremioData' => $premio->id
+            );
+        }
     }
 
     wp_send_json(array('success' => true, 'premios' => $premios));
 }
 add_action('wp_ajax_buscar_premios_sorteo', 'buscar_premios_sorteo');
 
-function getPremioConseguido($idPremio, $user_id) {
+function getPremioConseguido($id) {
     global $wpdb;
     $tabla = $wpdb->prefix . 'raffle_prizes_user';
 
-    $consulta_sql = "SELECT * FROM $tabla WHERE idPremio = $idPremio AND user_id = $user_id";
+    $consulta_sql = "SELECT * FROM $tabla WHERE id = $id";
     $premios = $wpdb->get_results($consulta_sql);
 
     return $premios;
@@ -845,3 +886,60 @@ function getPremioConfigById($idPremio) {
         }
     }
 }
+
+function updatePremioConfigById($id_premio, $premios_config) {
+    // Procesar la configuración del premio
+    if ($id_premio !== 0 && is_array($premios_config) && !empty($premios_config)) {
+        // Construir la estructura de datos
+        $data = array(
+            'id' => $id_premio,
+            'comercio_config' => array()
+        );
+
+        foreach ($premios_config as $premio) {
+            $comercioID = isset($premio['comercioID']) ? $premio['comercioID'] : 0;
+            $cantidad = isset($premio['cantidad']) ? $premio['cantidad'] : 0;
+
+            // Verificar si los datos son válidos
+            if (is_numeric($comercioID) && is_numeric($cantidad)) {
+                // Agregar la configuración del premio al array
+                $data['comercio_config'][] = array(
+                    'comercioID' => $comercioID,
+                    'cantidad' => $cantidad
+                );
+            }
+        }
+
+        // Codificar el array en JSON
+        $jsonString = json_encode($data);
+
+        // Guardar el JSON en un archivo local
+        $fileDirectory = plugin_dir_path(__FILE__) . 'config/';
+
+        if (!file_exists($fileDirectory)) {
+            if (!mkdir($fileDirectory, 0755, true)) {
+                echo "Error al crear el directorio de configuración.";
+                exit;
+            }
+        }
+
+        $file = $fileDirectory . $id_premio . '.json';
+
+        if (file_put_contents($file, $jsonString) !== false) {
+            // Obtener la URL del directorio del plugin
+            $plugin_url = plugins_url('/', __FILE__);
+
+            // Construir la URL completa del archivo JSON
+            $file_url = $plugin_url . 'config/' . $id_premio . '.json';
+
+            // Devolver la URL o utilizarla según sea necesario
+            echo "La configuración del premio se ha guardado correctamente. URL del archivo: $file_url";
+        } else {
+            echo "Error al guardar la configuración del premio. Detalles: " . error_get_last()['message'];
+        }
+
+    } else {
+        echo "Datos de entrada inválidos.";
+    }
+}
+

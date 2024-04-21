@@ -31,6 +31,41 @@ function save_code_shortcode()
             margin-bottom: 20px;
         }
 
+        .btnCerrar {
+            background-color: #4CAF50;
+            /* Color de fondo */
+            border: none;
+            /* Sin borde */
+            color: white;
+            /* Color del texto */
+            padding: 15px 32px;
+            /* Espacio de relleno */
+            text-align: center;
+            /* Alineación del texto */
+            text-decoration: none;
+            /* Sin decoración de texto */
+            display: inline-block;
+            /* Mostrar como elemento en línea */
+            font-size: 16px;
+            /* Tamaño de fuente */
+            margin: 4px 2px;
+            /* Margen */
+            cursor: pointer;
+            /* Cursor de tipo puntero */
+            border-radius: 8px;
+            /* Radio de borde para esquinas redondeadas */
+            transition-duration: 0.4s;
+            /* Duración de la transición */
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            /* Sombra */
+        }
+
+        .btnCerrar:hover {
+            background-color: #45a049;
+            /* Cambio de color de fondo al pasar el mouse */
+        }
+
+
         .code-input {
             width: 60px;
             height: 80px !important;
@@ -57,25 +92,19 @@ function save_code_shortcode()
             font-size: 24px;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: transparent;
+        .modal-content2 {
+            background-color: #B1F3B8;
             margin: auto;
             padding: 20px;
-            width: 50%;
-            height: 600px;
-            /* Ajusta el tamaño de la ventana modal según tus necesidades */
+            border: 1px solid #888;
+            border-radius: 10px;
+            max-width: 600px;
+            /* Ancho máximo de la ventana */
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .close {
@@ -90,6 +119,12 @@ function save_code_shortcode()
             color: black;
             text-decoration: none;
             cursor: pointer;
+        }
+
+        #modalPremio img {
+            max-width: 70%;
+            margin-bottom: 10px;
+            display: inline-block;
         }
 
         /* Estilo para la ventana modal */
@@ -109,19 +144,7 @@ function save_code_shortcode()
             /* Permite hacer scroll si el contenido de la ventana modal es largo */
             background-color: rgba(0, 0, 0, 0.5);
             /* Fondo semi-transparente */
-        }
-
-        /* Estilo para el contenido de la ventana modal */
-        #modalPremio .modal-content2 {
-            background-color: #fefefe;
-            /* Fondo blanco */
-            margin: 15% auto;
-            /* Centra la ventana modal verticalmente y la deja con un margen en los lados */
-            padding: 20px;
-            border: 1px solid #888;
-            border-radius: 10px;
-            max-width: 400px;
-            /* Ancho máximo de la ventana modal */
+            text-align: center;
         }
 
         /* Estilo para el botón de cerrar */
@@ -147,34 +170,29 @@ function save_code_shortcode()
     </style>
     <script>
         jQuery(document).ready(function () {
-            var bandera = true;
-            // Cerrar la ventana modal al terminar de reproducir el GIF
-            jQuery("#gif").on("load", function () {
-                if(bandera){
-                    setTimeout(function () {
-                        jQuery("#myModal").fadeOut();
-                        jQuery("#gif").attr("src", "");
-                        jQuery("#modalPremio").fadeIn();
-                    }, 10000);
-                }else{
-                    setTimeout(function () {
-                        jQuery("#myModal").fadeOut();
-                        jQuery("#gif").attr("src", "");
-                    }, 10000);
-                }
+
+            function mostrarTodo() {
+                jQuery(".premio-info").css('display', 'block');
+                jQuery("#detalles").css('display', 'block');
+            }
+
+            function apagarTodo() {
+                jQuery(".premio-info").css('display', 'none');
+                jQuery("#detalles").css('display', 'none');
+            }
+
+            jQuery('.btnCerrar').on('click', function () {
+                jQuery("#modalPremio").css("display", 'none');
+                location.reload();
             });
 
-            jQuery('myModal').on('hidden.bs.modal', function (e) {
-                if(bandera){
-                    jQuery("#modalPremio").fadeIn();
-                }
-                jQuery("#gif").attr("src", "");
+            jQuery('.close').on('click', function () {
+                jQuery("#modalPremio").css("display", 'none');
+                location.reload();
             });
 
-            // Cerrar la ventana modal al hacer clic en la "x" o fuera de la ventana
-            jQuery(".close, .modal").click(function () {
-                jQuery(this).fadeOut();
-                jQuery("#gif").attr("src", "");
+            jQuery('#modalPremio').on('hidden.bs.modal', function (e) {
+                location.reload();
             });
 
             jQuery('#saveBtn').on('click', function () {
@@ -198,29 +216,30 @@ function save_code_shortcode()
                     success: function (response) {
                         if (response.error == 0) {
                             var url = "https://alcalacentro.es/wp-content/plugins/raffle-plugin/includes/prizes_img/"; // Obtener el valor actual de src
-                            var newUrl = '/' + response.id + '.gif'; // Concatenar el nuevo valor a la URL existente
+                            var newUrl = '/' + response.id + '.jpg'; // Concatenar el nuevo valor a la URL existente
 
                             url = url + newUrl; // Concatenar el nuevo fragmento a la URL existente
-                            jQuery("#gif").attr("src", url);
-                            jQuery("#nombre").html(response.nombre);
+                            mostrarTodo();
+                            jQuery("#foto").attr("src", url);
                             jQuery("#descripcion").html(response.descripcion);
-                            if(response.comercio != 0){
-                                jQuery("#comercio").html("Puedes cangearlo en Electrosat Castillo");
-                            }else{
+                            if (response.comercio != 0) {
+                                jQuery("#comercio").html("Puedes cangearlo en el Punto de Control de C/Bolivia, 2");
+                            } else {
                                 jQuery("#comercio").html(response.comercio);
                             }
-                            
+
                             jQuery("#caducidad").html(response.fecha_caducidad);
-                            jQuery("#myModal").fadeIn();
+                            jQuery("#modalPremio").css("display", 'block');
 
                         } else {
+                            apagarTodo();
                             bandera = false;
                             var url = "https://alcalacentro.es/wp-content/plugins/raffle-plugin/includes/prizes_img/"; // Obtener el valor actual de src
-                            var newUrl = '/' + 0 + '.gif'; // Concatenar el nuevo valor a la URL existente
+                            var newUrl = '/' + 0 + '.jpg'; // Concatenar el nuevo valor a la URL existente
 
                             url = url + newUrl; // Concatenar el nuevo fragmento a la URL existente
-                            jQuery("#gif").attr("src", url);
-                            jQuery("#myModal").fadeIn();
+                            jQuery("#foto").attr("src", url);
+                            jQuery("#modalPremio").css("display", 'block');
                         }
                     },
                     error: function (error) {
@@ -243,25 +262,19 @@ function save_code_shortcode()
         <button id="saveBtn" class="btn btn-primary">Canjear Codigo</button>
     </div>
 
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            <div id="gifContainer">
-                <!-- Aquí se mostrará el GIF -->
-                <img id="gif" src="<?php echo esc_url(plugins_url('raffle-plugin/includes/prizes_img')); ?>"
-                    alt="Cargando..." width="1000" height="600">
-            </div>
-        </div>
-    </div>
-
-    <div id="modalPremio" class="modal">
+    <div id="modalPremio">
         <div class="modal-content2">
             <span class="close">&times;</span>
-            <h2>Detalles del Premio</h2>
+            <img src="" id="foto" alt="Imagen del premio">
+            <h2 id="detalles">Detalles del Premio</h2>
             <div class="premio-info">
-                <p><strong>Nombre del premio:</strong> </p><p id="nombre"></p>
-                <p><strong>Descripción:</strong></p> <p id="descripcion"></p>
-                <p><strong>Comercio donde canjearlo:</strong></p> <p id="comercio"></p>
-                <p><strong>Fecha de caducidad:</strong></p> <p id="caducidad"></p>
+                <p><strong>Descripción:</strong></p>
+                <p id="descripcion"></p>
+                <p><strong>Comercio donde canjearlo:</strong></p>
+                <p id="comercio"></p>
+                <p><strong>Fecha de caducidad:</strong></p>
+                <p id="caducidad"></p>
+                <button class="btnCerrar">Cerrar</button>
             </div>
         </div>
     </div>

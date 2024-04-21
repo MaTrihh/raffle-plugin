@@ -79,14 +79,14 @@ function save_prize_shortcode() {
                                 url: ajaxurl,
                                 data: {
                                     action: "buscar_premios_sorteo", // Acción que indica qué función de PHP llamar
-                                    user_id: user_id
+                                    user_id: user_id,
+                                    idAsociado: idAsociado
                                 },
                                 success: function (response) {
                                     if (response.success) {
 
                                         jQuery('#user_id').val(user_id);
                                         var premios = response.premios;
-                                        console.log(premios);
                                         jQuery(".modal-body").empty();
                                         jQuery(".modal-header").text("Premios");
 
@@ -97,14 +97,11 @@ function save_prize_shortcode() {
                                         table += '<tbody>';
 
                                         premios.forEach(function (premio, index) {
-                                            if(idAsociado == premio.idAsociado){
-
-                                                table += '<tr>';
-                                                table += '<td><input type="checkbox" name="rp_premios_canjeado[]" value="' + premio.id + '"></input></td>';
-                                                table += '<td>' + premio.nombre + '</td>';
-                                                table += '<td>' + premio.descripcion + '</td>';
-                                                table += '</tr>';
-                                            }
+                                            table += '<tr>';
+                                            table += '<td><input type="checkbox" name="rp_premios_canjeado[]" value="' + premio.idPremioData + '"></input></td>';
+                                            table += '<td>' + premio.nombre + '</td>';
+                                            table += '<td>' + premio.descripcion + '</td>';
+                                            table += '</tr>';
                                         });
 
                                         table += '</tbody></table>';
