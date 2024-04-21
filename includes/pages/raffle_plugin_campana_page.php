@@ -171,6 +171,7 @@ function raffle_plugin_campana_page()
                     var nombre = jQuery("#nombre").val();
                     var cantidad = jQuery("#cantidad").val();
                     var descripcion = jQuery("#descripcion").val();
+                    var foto = jQuery('#archivos').val();
                     var probabilidad = jQuery("#probabilidad").val();
                     if (jQuery("#global").prop('checked')) {
                         var premio_global = "Si";
@@ -180,7 +181,7 @@ function raffle_plugin_campana_page()
                         var premio_val = 0;
                     }
 
-                    var premio = [nombre, cantidad, descripcion, premio_val, probabilidad];
+                    var premio = [nombre, cantidad, descripcion, foto, premio_val, probabilidad];
 
                     premios.push(premio);
 
@@ -188,6 +189,7 @@ function raffle_plugin_campana_page()
                         jQuery('<td>').text(nombre),
                         jQuery('<td>').text(cantidad),
                         jQuery('<td>').text(descripcion),
+                        jQuery('<td>').text(foto),
                         jQuery('<td>').text(premio_global),
                         jQuery('<td>').text(probabilidad + '%')
                     );
@@ -217,6 +219,7 @@ function raffle_plugin_campana_page()
                         success: function (response) {
                             if (response.success) {
                                 alert("Campaña creada con exito");
+                                location.reload();
                             } else {
                                 alert("Ha habido algun error, pruebe mas tarde");
                             }
@@ -396,6 +399,7 @@ function raffle_plugin_campana_page()
                                 <th scope="col">Premio</th>
                                 <th scope="col">Cantidad</th>
                                 <th scope="col">Descripción</th>
+                                <th scope="col">foto</th>
                                 <th scope="col">Premio Global</th>
                                 <th scope="col">Probabilidad</th>
                             </tr>
@@ -493,6 +497,10 @@ function raffle_plugin_campana_page()
 
                             <label for="descripcion">Descripci�n del Premio:</label>
                             <input type="text" name="descripcion" id="descripcion"></input>
+
+                            </br></br>
+
+                            <?php echo generarSelectArchivosJPG(); ?>
 
                             </br></br>
 

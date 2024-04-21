@@ -216,7 +216,7 @@ function save_code_shortcode()
                     success: function (response) {
                         if (response.error == 0) {
                             var url = "https://alcalacentro.es/wp-content/plugins/raffle-plugin/includes/prizes_img/"; // Obtener el valor actual de src
-                            var newUrl = '/' + response.id + '.jpg'; // Concatenar el nuevo valor a la URL existente
+                            var newUrl = response.foto_url; // Concatenar el nuevo valor a la URL existente
 
                             url = url + newUrl; // Concatenar el nuevo fragmento a la URL existente
                             mostrarTodo();
@@ -235,7 +235,7 @@ function save_code_shortcode()
                             apagarTodo();
                             bandera = false;
                             var url = "https://alcalacentro.es/wp-content/plugins/raffle-plugin/includes/prizes_img/"; // Obtener el valor actual de src
-                            var newUrl = '/' + 0 + '.jpg'; // Concatenar el nuevo valor a la URL existente
+                            var newUrl = 'sin_premio.jpg'; // Concatenar el nuevo valor a la URL existente
 
                             url = url + newUrl; // Concatenar el nuevo fragmento a la URL existente
                             jQuery("#foto").attr("src", url);
